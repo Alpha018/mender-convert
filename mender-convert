@@ -31,6 +31,7 @@ declare append_extraargs=""   # Override arguments passed to the sub-scripts
 declare compression_type=""   # Detected input file compression, also applied to the output
 declare ocfile="./work/override_compression_config"
 declare disk_image=""         # Needed in parse_cli_options, and is passed to decompress_image()
+declare luks_passphrase=""
 declare -a overlays=()        # [Dummy] Needed in parse_cli_options, not here
 declare -a configs=()         # [Dummy] Needed in parse_cli_options, not here
 MENDER_ARTIFACT_NAME="${MENDER_ARTIFACT_NAME:-}"     # Required env variable
@@ -52,6 +53,7 @@ Options:
                                 Ubuntu, etc)
   -o, --overlay               - Path to root filesystem overlay directory, you
                                 are able to provide this option multiple times
+  --luks-passphrase           - Passphrase for crypto_LUKS partitions
   -c, --config                - Path to configuration file, you are able to
                                 provide this option multiple times
   -v, --version               - output version information and exit
@@ -115,15 +117,72 @@ fi
 
 testscfg_init
 
+function parse_extra_cli_options() {
+    while (("$#")); do
+        case "$1" in
+            -d|--disk-image)
+                shift
+                disk_image="$1"
+                ;;
+            --luks-passphrase)
+                shift
+                luks_passphrase="$1"
+                ;;
+            -o|--overlay)
+                shift
+                overlays+=("$1")
+                ;;
+            -c|--config)
+                shift
+                configs+=("$1")
+                ;;
+            *)
+                # Let the default parse_cli_options handle anything else
+                ;;
+        esac
+        shift || true
+    done
+}
+
 parse_cli_options "$@"
+parse_extra_cli_options "$@"
 
 compression_type=$(compression_type "${disk_image}")
-if [[ ${compression_type} != "none" ]]; then
-    uncompressed_disk_image=$(decompress_image "${disk_image}" "./work")
+if [[ "${compression_type}" != "none" ]]; then
+    uncompressed_disk_image="$(decompress_image "${disk_image}" "./work")"
     append_extraargs="--disk-image ${uncompressed_disk_image}"
+else
+    append_extraargs="--disk-image ${disk_image}"
 fi
 echo "MENDER_COMPRESS_DISK_IMAGE=${compression_type}" > ${ocfile}
 prepend_extraargs="--config ${ocfile}"
+
+declare -a luks_mappers=()
+
+function cleanup_luks_partitions() {
+    log_debug "cleanup_luks_partitions: closing any opened LUKS mappers..."
+    for mapper_name in "${luks_mappers[@]}"; do
+        if [ -n "$mapper_name" ] && cryptsetup status "$mapper_name" >/dev/null 2>&1; then
+            log_info "Closing LUKS mapper: /dev/mapper/${mapper_name}"
+            cryptsetup close "${mapper_name}" || true
+        fi
+    done
+}
+
+function open_luks_partition() {
+    local dev="$1"
+    local mapper_name="$2"
+
+    if [ -z "${luks_passphrase}" ]; then
+        log_fatal "Partition '$dev' is LUKS but no passphrase was provided (--luks-passphrase)."
+    fi
+
+    echo -n "${luks_passphrase}" > /tmp/luks_key
+    cryptsetup open "${dev}" "${mapper_name}" --key-file /tmp/luks_key
+    shred -u /tmp/luks_key
+
+    luks_mappers+=("${mapper_name}")
+}
 
 ./mender-convert-extract ${prepend_extraargs} "$@" ${append_extraargs}
 ./mender-convert-modify  ${prepend_extraargs} "$@" ${append_extraargs}

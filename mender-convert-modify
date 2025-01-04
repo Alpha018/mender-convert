@@ -91,6 +91,18 @@ data_part_device=$(disk_data_part_device)
 root_part_a_device=$(disk_root_part_a_device)
 root_part_b_device=$(disk_root_part_b_device)
 
+fs_type=$(sudo blkid -o value -s TYPE "${root_part}")
+if [ "$fs_type" = "crypto_LUKS" ]; then
+    echo "Detected LUKS partition for root: ${root_part}"
+
+    # Llama a la función open_luks_partition que definiste en el script principal
+    # (o donde hayas centralizado la lógica de cryptsetup). Por ejemplo:
+    open_luks_partition "${root_part}" "cryptroot"
+
+    # Cambia root_part para apuntar al mapper
+    root_part="/dev/mapper/cryptroot"
+fi
+
 # Create mount points
 mkdir -p work/boot
 mkdir -p work/rootfs
