@@ -150,12 +150,12 @@ parse_extra_cli_options "$@"
 compression_type=$(compression_type "${disk_image}")
 if [[ "${compression_type}" != "none" ]]; then
     uncompressed_disk_image="$(decompress_image "${disk_image}" "./work")"
-    append_extraargs="--disk-image ${uncompressed_disk_image} --passphrase ${LUKS_PASSPHRASE}"
+    append_extraargs="--disk-image ${uncompressed_disk_image}"
 else
-    append_extraargs="--disk-image ${disk_image} --passphrase ${LUKS_PASSPHRASE}"
+    append_extraargs="--disk-image ${disk_image}"
 fi
 echo "MENDER_COMPRESS_DISK_IMAGE=${compression_type}" > ${ocfile}
-prepend_extraargs="--config ${ocfile}"
+prepend_extraargs="--config ${ocfile} --luks-passphras ${luks_passphrase}"
 
 declare -a luks_mappers=()
 
