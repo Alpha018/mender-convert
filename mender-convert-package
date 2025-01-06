@@ -25,6 +25,7 @@ function trap_exit() {
     echo "mender-convert-package has finished. Cleaning up..."
     sudo umount -f work/boot > /dev/null 2>&1 || true
     sudo umount -f work/rootfs > /dev/null 2>&1 || true
+    cleanup_luks_partitions
 }
 
 function trap_term() {
@@ -83,6 +84,38 @@ output_dir=work
 
 boot_part=$(disk_boot_part)
 root_part=$(disk_root_part)
+
+function cleanup_luks_partitions() {
+    log_debug "cleanup_luks_partitions: closing any opened LUKS mappers..."
+    for mapper_name in "${luks_mappers[@]}"; do
+        if [ -n "$mapper_name" ] && cryptsetup status "$mapper_name" >/dev/null 2>&1; then
+            log_info "Closing LUKS mapper: /dev/mapper/${mapper_name}"
+            cryptsetup close "${mapper_name}" || true
+        fi
+    done
+}
+
+function open_luks_partition() {
+    local dev="$1"
+    local mapper_name="$2"
+
+    if [ -z "${luks_passphrase}" ]; then
+        log_fatal "Partition '$dev' is LUKS but no passphrase was provided (--passphrase)."
+    fi
+
+    echo -n "${luks_passphrase}" > /tmp/luks_key
+    cryptsetup open --type luks2 "${dev}" "${mapper_name}" --key-file /tmp/luks_key
+    shred -u /tmp/luks_key
+
+    luks_mappers+=("${mapper_name}")
+}
+
+fs_type=$(sudo blkid -o value -s TYPE "${root_part}")
+if [ "$fs_type" = "crypto_LUKS" ]; then
+    echo "Detected LUKS partition for root: ${root_part}"
+    open_luks_partition "${root_part}" "cryptroot"
+    root_part="/dev/mapper/cryptroot"
+fi
 
 # Sysfs device paths
 boot_part_device=$(disk_boot_part_device)
@@ -331,6 +364,7 @@ fi
 # Unmount filesystem image files
 run_and_log_cmd "sudo umount -f work/boot"
 run_and_log_cmd "sudo umount -f work/rootfs"
+cleanup_luks_partitions
 
 # Burn Partitions
 log_info "Writing boot partition image"

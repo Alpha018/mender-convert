@@ -35,6 +35,7 @@ function trap_exit() {
     echo "mender-convert-modify has finished. Cleaning up..."
     sudo umount -f work/boot
     sudo umount -f work/rootfs
+    cleanup_luks_partitions
 }
 
 function trap_term() {
