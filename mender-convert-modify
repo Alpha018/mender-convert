@@ -70,6 +70,10 @@ while (("$#")); do
             disk_image="${2}"
             shift 2
             ;;
+        --passphrase)
+            export LUKS_PASSPHRASE="${2}"
+            shift 2
+            ;;
         *)
             log_fatal "Sorry, but the provided option is not supported: $1"
             ;;
@@ -91,15 +95,39 @@ data_part_device=$(disk_data_part_device)
 root_part_a_device=$(disk_root_part_a_device)
 root_part_b_device=$(disk_root_part_b_device)
 
+declare -a luks_mappers=()
+
+function cleanup_luks_partitions() {
+    log_debug "cleanup_luks_partitions: closing any opened LUKS mappers..."
+    for mapper_name in "${luks_mappers[@]}"; do
+        if [ -n "$mapper_name" ] && cryptsetup status "$mapper_name" >/dev/null 2>&1; then
+            log_info "Closing LUKS mapper: /dev/mapper/${mapper_name}"
+            cryptsetup close "${mapper_name}" || true
+        fi
+    done
+}
+
+function open_luks_partition() {
+    local dev="$1"
+    local mapper_name="$2"
+
+    if [ -z "${luks_passphrase}" ]; then
+        log_fatal "Partition '$dev' is LUKS but no passphrase was provided (--passphrase)."
+    fi
+
+    echo -n "${luks_passphrase}" > /tmp/luks_key
+    cryptsetup open --type luks2 "${dev}" "${mapper_name}" --key-file /tmp/luks_key
+    shred -u /tmp/luks_key
+
+    luks_mappers+=("${mapper_name}")
+}
+
 fs_type=$(sudo blkid -o value -s TYPE "${root_part}")
 if [ "$fs_type" = "crypto_LUKS" ]; then
     echo "Detected LUKS partition for root: ${root_part}"
 
-    # Llama a la función open_luks_partition que definiste en el script principal
-    # (o donde hayas centralizado la lógica de cryptsetup). Por ejemplo:
     open_luks_partition "${root_part}" "cryptroot"
 
-    # Cambia root_part para apuntar al mapper
     root_part="/dev/mapper/cryptroot"
 fi
 
