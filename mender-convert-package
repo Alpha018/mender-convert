@@ -130,7 +130,7 @@ mkdir -p work/boot
 mkdir -p work/rootfs
 
 sudo mount ${boot_part} work/boot
-sudo mount ${root_part} work/rootfs
+sudo mount "/dev/mapper/cryptroot" work/rootfs
 
 # Convert to 512 blocks
 disk_image_total_sectors=$(disk_mb_to_sectors ${MENDER_STORAGE_TOTAL_SIZE_MB})
