@@ -19,7 +19,7 @@ function parse_cli_options()  {
                 overlays+=("${2}")
                 shift 2
                 ;;
-            --luks-passphrase)
+            -lp | --luks-passphrase)
                 luks_passphrase="${2}"
                 shift 2
                 ;;
@@ -32,8 +32,6 @@ function parse_cli_options()  {
                 shift 2
                 ;;
             *)
-                log_warn "error de aqui!!"
-
                 log_fatal "Sorry but the provided option is not supported: $1"
                 ;;
         esac

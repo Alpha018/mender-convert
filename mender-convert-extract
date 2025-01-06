@@ -41,7 +41,7 @@ while (("$#")); do
             overlays+=("${2}")
             shift 2
             ;;
-        --luks-passphrase)
+        -lp | --luks-passphrase)
             luks_passphrase="${2}"
             shift 2
             ;;

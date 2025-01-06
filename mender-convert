@@ -31,7 +31,7 @@ declare append_extraargs=""   # Override arguments passed to the sub-scripts
 declare compression_type=""   # Detected input file compression, also applied to the output
 declare ocfile="./work/override_compression_config"
 declare disk_image=""         # Needed in parse_cli_options, and is passed to decompress_image()
-declare luks_passphrase=""
+declare luks_passphrase=""    # Needed in parse_cli_options, and is passed to other functions
 declare -a overlays=()        # [Dummy] Needed in parse_cli_options, not here
 declare -a configs=()         # [Dummy] Needed in parse_cli_options, not here
 MENDER_ARTIFACT_NAME="${MENDER_ARTIFACT_NAME:-}"     # Required env variable
@@ -53,7 +53,7 @@ Options:
                                 Ubuntu, etc)
   -o, --overlay               - Path to root filesystem overlay directory, you
                                 are able to provide this option multiple times
-  --luks-passphrase           - Passphrase for crypto_LUKS partitions
+  -lp, --luks-passphrase      - Passphrase for crypto_LUKS partitions
   -c, --config                - Path to configuration file, you are able to
                                 provide this option multiple times
   -v, --version               - output version information and exit
@@ -124,7 +124,7 @@ function parse_extra_cli_options() {
                 shift
                 disk_image="$1"
                 ;;
-            --luks-passphrase)
+            -lp|--luks-passphrase)
                 shift
                 luks_passphrase="$1"
                 ;;
