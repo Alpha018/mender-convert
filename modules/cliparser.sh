@@ -18,6 +18,11 @@ function parse_cli_options()  {
             -o | --overlay)
                 overlays+=("${2}")
                 shift 2
+
+                ;;
+            --luks-passphrase)
+                shift
+                luks_passphrase="$1"
                 ;;
             -c | --config)
                 configs+=("${2}")
