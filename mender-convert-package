@@ -114,7 +114,6 @@ fs_type=$(sudo blkid -o value -s TYPE "${root_part}")
 if [ "$fs_type" = "crypto_LUKS" ]; then
     echo "Detected LUKS partition for root: ${root_part}"
     open_luks_partition "${root_part}" "cryptroot"
-    root_part="/dev/mapper/cryptroot"
 fi
 
 # Sysfs device paths
