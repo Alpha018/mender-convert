@@ -155,7 +155,7 @@ else
     append_extraargs="--disk-image ${disk_image}"
 fi
 echo "MENDER_COMPRESS_DISK_IMAGE=${compression_type}" > ${ocfile}
-prepend_extraargs="--config ${ocfile} --luks-passphras ${luks_passphrase}"
+prepend_extraargs="--config ${ocfile} --luks-passphrase ${luks_passphrase}"
 
 declare -a luks_mappers=()
 
