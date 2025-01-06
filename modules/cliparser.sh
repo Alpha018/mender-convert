@@ -21,8 +21,8 @@ function parse_cli_options()  {
 
                 ;;
             --luks-passphrase)
-                shift
-                luks_passphrase="$1"
+                luks_passphrase="${2}"
+                shift 2
                 ;;
             -c | --config)
                 configs+=("${2}")
