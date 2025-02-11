@@ -232,13 +232,12 @@ fi
 log_info "Rootfs filesystem size will be $(disk_sectors_to_mb ${rootfs_image_sectors}) MiB"
 
 # Extract file-system type from rootfs
-echo $root_part
-if file ${root_part} | grep -q ext4; then
+if file /dev/mapper/cryptroot | grep -q ext4; then
     image_fs_type="ext4"
-elif file ${root_part} | grep -q XFS; then
+elif file /dev/mapper/cryptroot | grep -q XFS; then
     image_fs_type="xfs"
 else
-    log_warn "$(file ${root_part})"
+    log_warn "$(file /dev/mapper/cryptroot)"
     log_fatal "Could not determine root file-system type. Aborting..."
 fi
 
