@@ -232,7 +232,8 @@ fi
 log_info "Rootfs filesystem size will be $(disk_sectors_to_mb ${rootfs_image_sectors}) MiB"
 
 # Extract file-system type from rootfs
-echo file /dev/mapper/cryptroot
+echo "estoy por imprimir el file"
+echo $(file /dev/mapper/cryptroot)
 if file /dev/mapper/cryptroot | grep -q ext4; then
     image_fs_type="ext4"
 elif file /dev/mapper/cryptroot | grep -q XFS; then
