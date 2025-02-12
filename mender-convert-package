@@ -229,12 +229,15 @@ if [ ${rootfs_image_sectors} -gt ${rootfs_part_sectors} ]; then
     log_fatal "You can try adjusting the MENDER_STORAGE_TOTAL_SIZE_MB variable to increase available space, or modify one of the variables IMAGE_ROOTFS_SIZE, IMAGE_ROOTFS_EXTRA_SPACE or IMAGE_OVERHEAD_FACTOR to reduce the size of the root filesystem."
 fi
 
+log_info "estoy por imprimir el file"
+log_info "$(file /dev/mapper/cryptroot)"
+log_info "$(file /dev/mapper/cryptroot | grep fs)"
 log_info "Rootfs filesystem size will be $(disk_sectors_to_mb ${rootfs_image_sectors}) MiB"
 
 # Extract file-system type from rootfs
-log_debug "estoy por imprimir el file"
-log_debug "$(file /dev/mapper/cryptroot)"
-log_debug "$(file /dev/mapper/cryptroot | grep fs)"
+log_info "estoy por imprimir el file"
+log_info "$(file /dev/mapper/cryptroot)"
+log_info "$(file /dev/mapper/cryptroot | grep fs)"
 if file /dev/mapper/cryptroot | grep -q ext4; then
     image_fs_type="ext4"
 elif file /dev/mapper/cryptroot | grep -q XFS; then
