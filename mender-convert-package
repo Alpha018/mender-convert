@@ -235,17 +235,16 @@ log_info "$(file /dev/mapper/cryptroot | grep fs)"
 log_info "Rootfs filesystem size will be $(disk_sectors_to_mb ${rootfs_image_sectors}) MiB"
 
 # Extract file-system type from rootfs
+fs_type=$(sudo blkid -o value -s TYPE /dev/mapper/cryptroot)
 log_info "estoy por imprimir el file"
 log_info "$(file /dev/mapper/cryptroot)"
-log_info "$(file /dev/mapper/cryptroot | grep fs)"
-if file /dev/mapper/cryptroot | grep -q ext4; then
+log_info "$(fs_type)"
+if [ "$fs_type" = "ext4" ]; then
     image_fs_type="ext4"
-elif file /dev/mapper/cryptroot | grep -q XFS; then
+elif [ "$fs_type" = "xfs" ]; then
     image_fs_type="xfs"
-elif file /dev/mapper/cryptroot | grep -q btrfs; then
-    image_fs_type="btrfs"
-elif file /dev/mapper/cryptroot | grep -q fs; then
-    image_fs_type="fs"
+elif [ "$fs_type" = "f2fs" ]; then
+    image_fs_type="f2fs"
 else
     log_warn "$(file /dev/mapper/cryptroot)"
     log_fatal "Could not determine root file-system type. Aborting..."
