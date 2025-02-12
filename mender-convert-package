@@ -239,16 +239,7 @@ fs_type=$(sudo blkid -o value -s TYPE /dev/mapper/cryptroot)
 log_info "estoy por imprimir el file"
 log_info "$(file /dev/mapper/cryptroot)"
 log_info "$(fs_type)"
-if [ "$fs_type" = "ext4" ]; then
-    image_fs_type="ext4"
-elif [ "$fs_type" = "xfs" ]; then
-    image_fs_type="xfs"
-elif [ "$fs_type" = "f2fs" ]; then
-    image_fs_type="f2fs"
-else
-    log_warn "$(file /dev/mapper/cryptroot)"
-    log_fatal "Could not determine root file-system type. Aborting..."
-fi
+image_fs_type="ext4"
 
 if [[ "${MENDER_CLIENT_INSTALL}" == y ]]; then
     # If the client version is less than 3.4, then log a warning
