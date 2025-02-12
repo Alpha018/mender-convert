@@ -239,8 +239,8 @@ elif file /dev/mapper/cryptroot | grep -q XFS; then
     image_fs_type="xfs"
 elif file /dev/mapper/cryptroot | grep -q btrfs; then
     image_fs_type="btrfs"
-elif file /dev/mapper/cryptroot | grep -q f2fs; then
-    image_fs_type="f2fs"
+elif file /dev/mapper/cryptroot | grep -q fs; then
+    image_fs_type="fs"
 else
     log_warn "$(file /dev/mapper/cryptroot)"
     log_fatal "Could not determine root file-system type. Aborting..."
